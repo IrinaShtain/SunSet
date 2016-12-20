@@ -16,13 +16,15 @@ public class SunsetFragment extends Fragment {
 
     private View mSceneView;
     private View mSunView;
+    private View mSunWaterView;
     private View mSkyView;
+    private View mWaterView;
 
     private int mBlueSkyColor;
     private int mSunsetSkyColor;
     private int mNightSkyColor;
 
-    private int count = 0;
+    private boolean isSunRize = true;
 
     public static SunsetFragment newInstance()
     {
@@ -37,6 +39,8 @@ public class SunsetFragment extends Fragment {
         mSceneView = view;
         mSunView = view.findViewById(R.id.sun);
         mSkyView = view.findViewById(R.id.sky);
+        mSunWaterView = view.findViewById(R.id.water_sun);
+        mWaterView = view.findViewById(R.id.water);
 
         Resources resources = getResources();
         mBlueSkyColor = resources.getColor(R.color.blue_sky);
@@ -46,13 +50,13 @@ public class SunsetFragment extends Fragment {
         mSceneView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (count%2 == 0) {
-                    count++;
+                if (isSunRize) {
+                    isSunRize = false;
                     startAnimation1();
                 }
                 else
                 {
-                    count++;
+                    isSunRize=true;
                     startAnimation2();
                 }
             }
@@ -61,44 +65,48 @@ public class SunsetFragment extends Fragment {
     }
 
     private void startAnimation2() {
-        float sunYStart = mSkyView.getTop();
-        float sunYEnd = mSunView.getTop();;
+        float sunYStart = mWaterView.getTop();
+        float sunYEnd = mSunView.getTop();
+        float sunWaterYEnd = mSunWaterView.getTop();
 
         ObjectAnimator heightAnimator = ObjectAnimator
                 .ofFloat(mSunView, "y",sunYStart, sunYEnd)
                 .setDuration(3000);
         heightAnimator.setInterpolator(new AccelerateInterpolator());
 
+        ObjectAnimator waterAnimator = ObjectAnimator
+                .ofFloat(mSunWaterView, "y",-sunYStart, sunWaterYEnd)
+                .setDuration(2900);
+        waterAnimator.setInterpolator(new AccelerateInterpolator());
+
+
         ObjectAnimator sunsetSkyAnimator = ObjectAnimator
-                .ofInt(mSkyView, "backgroundColor",mNightSkyColor, mSunsetSkyColor,mBlueSkyColor )
+                .ofInt(mSkyView, "backgroundColor", mNightSkyColor, mSunsetSkyColor,mBlueSkyColor )
                 .setDuration(3000);
         sunsetSkyAnimator.setEvaluator(new ArgbEvaluator());
-
-        ObjectAnimator sunAnimator = ObjectAnimator
-                .ofInt(mSunView, "backgroundColor",mSunsetSkyColor )
-                .setDuration(1500);
-        sunAnimator.setEvaluator(new ArgbEvaluator());
-
-
-
 
         AnimatorSet animatorSet = new AnimatorSet();
         animatorSet
                 .play(heightAnimator)
                 .with(sunsetSkyAnimator)
-                .before(sunAnimator);
+                .with(waterAnimator);
         animatorSet.start();
-
     }
 
     private void startAnimation1() {
         float sunYStart = mSunView.getTop();
         float sunYEnd = mSkyView.getHeight();
+        float sunWaterYStart = mSunWaterView.getTop();
 
         ObjectAnimator heightAnimator = ObjectAnimator
                 .ofFloat(mSunView, "y",sunYStart, sunYEnd)
                 .setDuration(3000);
         heightAnimator.setInterpolator(new AccelerateInterpolator());
+
+        ObjectAnimator waterAnimator = ObjectAnimator
+                .ofFloat(mSunWaterView, "y",sunWaterYStart, -sunYEnd)
+                .setDuration(4500);
+        waterAnimator.setInterpolator(new AccelerateInterpolator());
 
         ObjectAnimator sunsetSkyAnimator = ObjectAnimator
                 .ofInt(mSkyView, "backgroundColor", mBlueSkyColor, mSunsetSkyColor, mNightSkyColor)
@@ -114,6 +122,7 @@ public class SunsetFragment extends Fragment {
         animatorSet
                 .play(heightAnimator)
                 .with(sunsetSkyAnimator)
+                .with(waterAnimator)
                 .before(nightSkyAnimator);
         animatorSet.start();
 
